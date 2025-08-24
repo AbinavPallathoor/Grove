@@ -2,48 +2,53 @@ import streamlit as st
 import pandas as pd
 import pydeck as pdk
 
-# Sensor Positions
-# Format: "Name" [(lat, lon), health, time_to_water]
+# Function to choose image based on health
+def get_tree_icon_url(health):
+    if health < 25:
+        return "https://raw.githubusercontent.com/AbinavPallathoor/Grove/refs/heads/main/tree25.png"
+    elif health <= 70:
+        return "https://raw.githubusercontent.com/AbinavPallathoor/Grove/refs/heads/main/tree70.png"
+    else:
+        return "https://raw.githubusercontent.com/AbinavPallathoor/Grove/refs/heads/main/tree100.png"
+
+# Sensor Positions: "Name" -> [(lat, lon), health, time_to_water]
 sensors = {
     "Bob": [(12.97104135751912, 79.16379375663011), 50, "Sunday, 12:45pm"],
     "Rob": [(12.971529475267, 79.16343174675109), 100, "Sunday, 12:45pm"]
 }
 
-names = list(sensors.keys())
-lats = [sensors[n][0][0] for n in names]
-lons = [sensors[n][0][1] for n in names]
-infos = [f"{name}\n{sensors[name][2]}" for name in sensors]
+# Prepare dataframe with dynamic icon URLs
+rows = []
+for name, (coords, health, time) in sensors.items():
+    rows.append({
+        "lat": coords[0],
+        "lon": coords[1],
+        "info": f"{name}\n{time}",
+        "icon_data": {
+            "url": get_tree_icon_url(health),
+            "width": 128,
+            "height": 128,
+            "anchorY": 128
+        }
+    })
 
-# Sensor Plots
-df = pd.DataFrame({
-    'lat': lats,
-    'lon': lons,
-    'info': infos
-})
+df = pd.DataFrame(rows)
 
-# Add an icon definition per row (replace the URL with your own PNG if you like)
-df["icon_data"] = [{
-    "url": "tree.png",  # <-- your icon PNG here
-    "width": 128,
-    "height": 128,
-    "anchorY": 128   # anchors the bottom of the icon at the coordinate
-} for _ in range(len(df))]
-
-# Icon layer (image marker instead of circle)
+# Icon layer
 icon_layer = pdk.Layer(
     "IconLayer",
     data=df,
     get_icon="icon_data",
     get_position="[lon, lat]",
-    get_size=4,        # base size in pixels
-    size_scale=10,     # scales the size up (tweak as needed)
+    get_size=4,
+    size_scale=12,
     pickable=True
 )
 
 # View state
 view_state = pdk.ViewState(
-    latitude=lats[0],
-    longitude=lons[0],
+    latitude=df["lat"].mean(),
+    longitude=df["lon"].mean(),
     zoom=18,
     pitch=0
 )
