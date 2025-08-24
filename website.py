@@ -11,13 +11,14 @@ def get_tree_icon_url(health):
     else:
         return "https://raw.githubusercontent.com/AbinavPallathoor/Grove/refs/heads/main/tree100.png"
 
-# Sensor Positions: "Name" -> [(lat, lon), health, time_to_water]
+# Sensor Positions
 sensors = {
-    "Bob": [(12.97104135751912, 79.16379375663011), 50, "Sunday, 12:45pm"],
-    "Rob": [(12.971529475267, 79.16343174675109), 100, "Sunday, 12:45pm"]
+    "Greeno": [(12.96947962281231, 79.15840797707915), 80, "Tuesday, 12:45pm"],
+    "Tank": [(12.970008248014226, 79.15841899890708), 60, "Sunday, 12:45pm"],
+    "Wood": [(12.96986963409287, 79.1589965417121), 20, "Monday, 12:45pm"]
 }
 
-# Prepare dataframe with dynamic icon URLs
+# Build DataFrame
 rows = []
 for name, (coords, health, time) in sensors.items():
     rows.append({
@@ -34,14 +35,14 @@ for name, (coords, health, time) in sensors.items():
 
 df = pd.DataFrame(rows)
 
-# Icon layer
+# Icon layer with dynamic image
 icon_layer = pdk.Layer(
     "IconLayer",
     data=df,
-    get_icon="icon_data",
-    get_position="[lon, lat]",
+    get_icon="icon_data",  # Now points to single column with all icon details
+    get_position='[lon, lat]',
     get_size=4,
-    size_scale=12,
+    size_scale=16,
     pickable=True
 )
 
@@ -53,7 +54,7 @@ view_state = pdk.ViewState(
     pitch=0
 )
 
-# Render
+# Render map
 st.pydeck_chart(
     pdk.Deck(
         layers=[icon_layer],
